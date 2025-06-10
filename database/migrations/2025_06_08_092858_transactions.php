@@ -10,20 +10,22 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up()
-{
-    Schema::create('transactions', function (Blueprint $table) {
-        $table->id();
-        $table->string('email');
-        $table->string('phone');
-        $table->string('name');
-        $table->string('nim');
-        $table->string('method');
-        $table->string('bank')->nullable();
-        $table->integer('total');
-        $table->string('status')->default('pending'); // status pembayaran
-        $table->timestamps();
-    });
-}
+    {
+        Schema::create('transactions', function (Blueprint $table) {
+            $table->id();
+            $table->string('email');
+            $table->string('slug')->unique();
+            $table->string('phone');
+            $table->string('name');
+            $table->string('nik');
+            $table->string('method');
+            $table->string('bank')->nullable();
+            $table->integer('total');
+            $table->string('status')->default('pending'); // status pembayaran
+            $table->string('bukti_pembayaran')->nullable();
+            $table->timestamps();
+        });
+    }
 
     /**
      * Reverse the migrations.

@@ -10,15 +10,21 @@ class Transaction extends Model
         'email',
         'phone',
         'name',
-        'nim',
+        'nik',
         'method',
         'bank',
         'total',
         'status',
+        'slug',
+        'bukti_pembayaran',
     ];
-public function ticket()
-{
-    return $this->hasOne(Ticket::class);
-}
 
+    protected $casts = [
+        'total' => 'integer',
+    ];
+
+    public function ticket()
+    {
+        return $this->hasOne(Ticket::class);
+    }
 }

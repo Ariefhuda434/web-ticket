@@ -1,24 +1,17 @@
 <?php
-
 namespace App\Http\Controllers;
 
+use App\Mail\Order;
+use App\Models\Ticket;
 use App\Models\Transaction;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Mail\PaymentConfirmed;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Mail;
-use App\Models\Ticket;
-use Illuminate\Support\Str;
-use App\Mail\PaymentConfirmed;
-
 
 class TransactionController extends Controller
 {
-    // Tampilkan halaman form checkout
-    public function create()
-    {
-        return view('transactions.create'); // buat view checkout form nanti
-    }
-
     // Proses simpan transaksi baru
     public function store(Request $request)
     {
@@ -26,100 +19,155 @@ class TransactionController extends Controller
             'email' => 'required|email',
             'phone' => 'required',
             'name' => 'required',
-            'nim' => 'required',
-            'method' => 'required',
+            'nik' => 'required',
+            'method' => 'required|in:bank,dana,ewallet',
             'total' => 'required|integer',
-            'bank' => 'nullable',
+            'bank' => 'required_if:method,bank|in:Mandiri,BSI',
         ]);
+
+        $slug = Str::slug($validated['name']) . '-' . Str::random(6);
 
         $transaction = Transaction::create([
             'email' => $validated['email'],
             'phone' => $validated['phone'],
             'name' => $validated['name'],
-            'nim' => $validated['nim'],
+            'nik' => $validated['nik'],
             'method' => $validated['method'],
             'bank' => $validated['bank'] ?? null,
             'total' => $validated['total'],
             'status' => 'pending',
+            'slug' => $slug,
         ]);
 
-           return redirect()->route('transactions.status', $transaction->id)
-        ->with('success', 'Transaksi berhasil dibuat. Silakan lakukan pembayaran.');
+        Mail::to($transaction->email)->queue(new PaymentConfirmed($transaction));
+
+        return redirect()->route('transactions.status', $transaction->slug)
+            ->with('success', 'Transaksi berhasil dibuat. Silakan lakukan pembayaran.');
     }
 
-    // Tampilkan daftar transaksi dengan pagination
-    public function index()
-    {
-        $transactions = Transaction::orderBy('created_at', 'desc')->paginate(10);
-        return view('transactions.index', compact('transactions'));
-    }
- 
-public function webhook(Request $request)
+
+
+public function index(Request $request)
 {
-    $transactionId = $request->input('transaction_id');
-    $status = $request->input('status'); 
+    $key = $request->query('key');
 
-    $transaction = Transaction::where('id', $transactionId)->first();
-    if (!$transaction) {
-        return response()->json(['message' => 'Transaction not found'], 404);
+    if ($key !== env('ADMIN_ACCESS_KEY')) {
+        abort(403, 'Unauthorized');
     }
 
-    $oldStatus = $transaction->status;
+    $pendingTransactions = Transaction::where('status', 'pending')
+        ->orderBy('created_at', 'desc')
+        ->get();
 
-    if (in_array($status, ['paid', 'settlement', 'success'])) {
-        $transaction->status = 'paid';
+    $paidTransactions = Transaction::where('status', 'paid')
+        ->orderBy('created_at', 'desc')
+        ->get();
 
-        // Buat tiket hanya kalau belum ada tiket untuk transaksi ini
-        if (!$transaction->ticket) {
-            $ticket = Ticket::create([
-                'transaction_id' => $transaction->id,
-                'ticket_code' => strtoupper(Str::random(10)), // kode tiket unik 10 karakter
-            ]);
-        } else {
-            $ticket = $transaction->ticket;
-        }
-    } elseif ($status === 'pending') {
-        $transaction->status = 'pending';
-    } elseif ($status === 'failed') {
-        $transaction->status = 'failed';
+    return view('admin-dashboard', compact('pendingTransactions', 'paidTransactions', 'key'));
+}
+
+
+// Admin lihat pending + paid
+public function pending(Request $request)
+{
+    $key = $request->query('key');
+    if ($key !== env('ADMIN_ACCESS_KEY')) {
+        abort(403, 'Unauthorized');
     }
 
+    $transactions = Transaction::orderBy('created_at', 'desc')->paginate(10);
+
+return view('transactions.pending', compact('transactions', 'key'));
+}
+
+public function approve($slug)
+{
+    $transaction = Transaction::where('slug', $slug)->firstOrFail();
+
+    if ($transaction->status !== 'pending') {
+        return back()->with('error', 'Transaksi sudah diproses.');
+    }
+
+    $transaction->status = 'paid';
     $transaction->save();
+    
+        Mail::to($transaction->email)->queue(new Order($transaction));
 
-    if ($oldStatus !== 'paid' && $transaction->status === 'paid') {
-        Mail::to($transaction->email)->send(new PaymentConfirmed($transaction, $ticket ?? null));
-    }
-
-    return response()->json(['message' => 'Status updated']);
+    return back()->with('success', 'Transaksi berhasil diapprove.');
 }
 
+    // Terima webhook untuk update status transaksi
+    public function webhook(Request $request)
+    {
+        $transactionId = $request->input('transaction_id');
+        $status = $request->input('status');
 
-    public function status($id)
-{
-    $transaction = Transaction::findOrFail($id);
-    return view('transactions.status', compact('transaction'));
-}
+        $transaction = Transaction::where('id', $transactionId)->first();
+        if (!$transaction) {
+            return response()->json(['message' => 'Transaction not found'], 404);
+        }
 
-public function uploadBukti(Request $request, $id)
-{
-    $transaction = Transaction::findOrFail($id);
+        $oldStatus = $transaction->status;
 
-    if ($transaction->bukti_pembayaran) {
-        return redirect()->back()->with('error', 'Bukti pembayaran sudah diunggah.');
+        if (in_array($status, ['paid', 'settlement', 'success'])) {
+            $transaction->status = 'paid';
+
+            if (!$transaction->ticket) {
+                $ticket = Ticket::create([
+                    'transaction_id' => $transaction->id,
+                    'ticket_code' => strtoupper(Str::random(10)),
+                ]);
+            } else {
+                $ticket = $transaction->ticket;
+            }
+        } elseif ($status === 'pending') {
+            $transaction->status = 'pending';
+        } elseif ($status === 'failed') {
+            $transaction->status = 'failed';
+        }
+
+        $transaction->save();
+
+        if ($oldStatus !== 'paid' && $transaction->status === 'paid') {
+            Mail::to($transaction->email)->send(new Order($transaction, $ticket));
+        }
+
+        return response()->json(['message' => 'Status updated']);
     }
 
+    // Tampilkan status transaksi berdasarkan slug
+    public function status($slug)
+    {
+        $transaction = Transaction::where('slug', $slug)->firstOrFail();
+
+        return view('transactions.status', compact('transaction'));
+    }
+
+    // Upload bukti pembayaran berdasarkan slug transaksi
+   public function uploadBukti(Request $request, $slug)
+{
     $request->validate([
-        'bukti_pembayaran' => 'required|image|max:2048',
+        'bukti' => 'required|mimes:jpeg,jpg,png,pdf',
     ]);
 
-    $file = $request->file('bukti_pembayaran');
-    $path = $file->store('bukti_pembayaran', 'public');
+    $transaction = Transaction::where('slug', $slug)->firstOrFail();
 
-    $transaction->bukti_pembayaran = $path;
-    $transaction->save();
+    if ($request->hasFile('bukti')) {
+        $file = $request->file('bukti');
+        $originalExtension = $file->getClientOriginalExtension();
+        $filename = time() . '_bukti.' . $originalExtension;
+        $path = $file->storeAs('bukti', $filename, 'public');
 
-    return redirect()->back()->with('success', 'Bukti pembayaran berhasil diunggah.');
+        $transaction->bukti_pembayaran = $path;
+        $transaction->save();
+
+        // Kembali ke halaman status transaksi
+        return redirect()->route('transactions.status', $transaction->slug)
+            ->with('success', 'Bukti pembayaran berhasil diupload!');
+    }
+
+    return redirect()->route('transactions.status', $transaction->slug)
+        ->with('error', 'Gagal upload bukti pembayaran!');
 }
-
 
 }

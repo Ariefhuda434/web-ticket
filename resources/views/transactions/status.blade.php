@@ -72,6 +72,13 @@
 <body class="bg-baseBg min-h-screen flex items-center justify-center p-6 font-poppins">
 
   <div class="bg-white/95 backdrop-blur-md border border-pistachio rounded-3xl shadow-soft-lg max-w-lg w-full p-10 text-indigoCustom" x-init="init()">
+      <img 
+  src="{{ asset('build/images/icons8-back-to-50.png') }}"
+  @click="goHome()"
+  class="absolute top-4 left-4 h-10 w-10 scale=105 transition-all ease-in-out duration-300 cursor-pointer z-10"
+  alt="Back"
+/>
+
     <h1 class="text-4xl font-extrabold mb-8 text-center tracking-wide font-marker drop-shadow-md text-indigoCustom">
       Status Pembayaran
     </h1>
@@ -156,13 +163,11 @@
           </p>
           <img src="{{ asset('storage/' . $transaction->bukti_pembayaran) }}" alt="Bukti Pembayaran" class="rounded-lg shadow-md mb-6 w-full max-h-80 object-contain" />
         @else
-          <form action="{{ route('transactions.upload_bukti', $transaction->id) }}" method="POST" enctype="multipart/form-data" class="space-y-5">
+          <form action="{{ route('transactions.uploadBukti', $transaction->slug) }}" method="POST" enctype="multipart/form-data" class="space-y-5">
             @csrf
-            @method('POST')
-
             <input
               type="file"
-              name="bukti_pembayaran"
+              name="bukti"
               accept="image/*"
               required
               class="w-full px-5 py-3 border border-pistachio rounded-xl focus:ring-2 focus:ring-matcha focus:outline-none transition"
@@ -184,12 +189,7 @@
     @endif
 
     <!-- Tombol kembali -->
-    <button
-      @click="goHome()"
-      class="mt-12 w-full py-3 rounded-xl bg-matcha hover:bg-pistachio text-indigoCustom font-semibold transition"
-    >
-      Kembali ke Beranda
-    </button>
+ 
   </div>
 
   <script>
@@ -209,7 +209,7 @@
               this.statusText = 'Sudah Dibayar ✅';
               this.statusClass = 'text-matcha';
             } else if (status === 'pending') {
-              this.statusText = 'Menunggu Pembayaran ⏳';
+              this.statusText = 'Menunggu Pembayaran';
               this.statusClass = 'text-peach';
             } else {
               this.statusText = `Status: ${status}`;

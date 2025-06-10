@@ -11,7 +11,7 @@
           <a href="#event-info" class="hover:text-peach transition-smooth">Info Acara</a>
           <a href="#features" class="hover:text-peach transition-smooth">Keunggulan</a>
           <a href="#tickets" class="hover:text-peach transition-smooth">Tiket</a>
-          <a href="#purchase" class="hover:text-peach transition-smooth">Pembelian</a>
+         
           <div class="relative cursor-pointer" @click="toggleCart()" title="Lihat Keranjang">
             <i class="fa-solid fa-cart-shopping text-peach text-2xl"></i>
             <span
@@ -29,14 +29,14 @@
       <div
         x-show="mobileMenuOpen"
         @click.away="mobileMenuOpen = false"
-        class="md:hidden bg-indigoCustom/90 backdrop-blur rounded-b-lg py-6 space-y-6 font-semibold text-pistachio text-lg"
+        class="md:hidden bg-indigoCustom/90 backdrop-blur  py-3 space-y-3 w-screen -ml-[1.5rem] pl-5 font-semibold text-pistachio text-lg"
         x-transition
       >
         <a href="#home" @click="mobileMenuOpen = false" class="block hover:text-peach transition-smooth">Beranda</a>
         <a href="#event-info" @click="mobileMenuOpen = false" class="block hover:text-peach transition-smooth">Info Acara</a>
         <a href="#features" @click="mobileMenuOpen = false" class="block hover:text-peach transition-smooth">Keunggulan</a>
         <a href="#tickets" @click="mobileMenuOpen = false" class="block hover:text-peach transition-smooth">Tiket</a>
-        <a href="#purchase" @click="mobileMenuOpen = false" class="block hover:text-peach transition-smooth">Pembelian</a>
+
       </div>
     </div>
   </nav>
