@@ -16,7 +16,7 @@ class Transaction extends Model
         'total',
         'status',
         'slug',
-        'bukti_pembayaran',
+        'bukti',
     ];
 
     protected $casts = [

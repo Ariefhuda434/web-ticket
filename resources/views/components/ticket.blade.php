@@ -133,61 +133,6 @@ x-init="init()"
     });
 
     return {
-       tickets: [
-        {
-          id: 1,
-          name: "Single",
-          price: 30000,
-          description: "Untuk 1 orang",
-          deskripsi: "Nikmati pengalaman seru bersama teman & keluarga!",
-          image: "/images/icons8-ticket-80.png",
-        },
-        {
-          id: 2,
-          name: "Couple",
-          price: 45000,
-          description: "Untuk 2 orang",
-          deskripsi: "Tiket berdua yang bisa kamu beli bareng pasangan / temen kamu !",
-          image: "{{ asset('images/icons8-ticket-80.png') }}",
-          
-        },
-        {
-          id: 3,
-          name: "Mates",
-          price: 90000,
-          description: "Untuk 4 orang",
-          deskripsi: "4 tiket yang bisa dibeli bareng temen - temen deket kamu",
-          image: "{{ asset('images/icons8-ticket-80.png') }}",
-          
-        },
-        {
-          id: 4,
-          name: "Group",
-          price: 135000,
-          description: "Untuk 6 orang",
-          deskripsi: "6 tiket yang cocok dibeli bareng teman - teman di circle kamu",
-          image: "{{ asset('images/icons8-ticket-80.png') }}",
-        },
-        {
-          id: 5,
-          name: "Party",
-          price: 175000,
-          description: "Untuk 8 orang",
-          deskripsi:
-            "Tiket ramean yang isinya 8 tiket dan oke banget buat dibeli bareng teman - teman party kamu !",
-          image: "{{ asset('build/images/icons8-ticket-80.png') }}",
-          
-          },
-        {
-          id: 6,
-          name: "Sapma Family",
-          price: 325000,
-          description: "Untuk 15 orang",
-          deskripsi: "Tiket khusus kader SAPMA PP yang isisnya 15 tiket ! (per-komisariat)",
-          image: "{{ asset('images/icons8-ticket-80.png') }}",
-          
-        },
-      ],
       cart: [],
       formatCurrency(value) {
         return new Intl.NumberFormat("id-ID", {

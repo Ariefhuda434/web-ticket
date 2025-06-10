@@ -21,8 +21,8 @@ return new class extends Migration
             $table->string('method');
             $table->string('bank')->nullable();
             $table->integer('total');
-            $table->string('status')->default('pending'); // status pembayaran
-            $table->string('bukti_pembayaran')->nullable();
+            $table->string('status')->default('pending'); 
+            $table->string('bukti')->nullable();
             $table->timestamps();
         });
     }

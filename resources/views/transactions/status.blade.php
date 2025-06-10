@@ -156,12 +156,12 @@
           <span>Upload Bukti Pembayaran</span>
         </h3>
 
-        @if ($transaction->bukti_pembayaran)
+        @if ($transaction->bukti)
           <p class="mb-4 text-matcha font-semibold flex items-center space-x-2">
             <i class="fa-solid fa-check-circle"></i>
             <span>Bukti pembayaran sudah diunggah:</span>
           </p>
-          <img src="{{ asset('storage/' . $transaction->bukti_pembayaran) }}" alt="Bukti Pembayaran" class="rounded-lg shadow-md mb-6 w-full max-h-80 object-contain" />
+          <img src="{{ asset('storage/' . $transaction->bukti) }}" alt="Bukti Pembayaran" class="rounded-lg shadow-md mb-6 w-full max-h-80 object-contain" />
         @else
           <form action="{{ route('transactions.uploadBukti', $transaction->slug) }}" method="POST" enctype="multipart/form-data" class="space-y-5">
             @csrf

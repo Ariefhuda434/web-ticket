@@ -63,7 +63,7 @@
                                     <td class="px-4 py-3 text-yellow-600 font-semibold">Pending</td>
                                     <td class="px-4 py-3 text-sm text-gray-500">{{ $trx->created_at->format('d M Y H:i') }}</td>
                                     <td class="px-4 py-3">
-                                        @if($trx->bukti_pembayaran)
+                                        @if($trx->bukti)
                                           <div  class="relative">
         <button onclick="document.getElementById('bukti').classList.remove('hidden')"  class="text-blue-600 hover:underline">Lihat Bukti</button>
 
@@ -73,7 +73,7 @@
              x-transition 
              class="fixed inset-0 flex items-center justify-center bg-black hidden bg-opacity-50 z-50">
             <div class="bg-white p-4 rounded-lg shadow-lg max-w-md w-full relative">
-                <img src="{{ asset('storage/' . $trx->bukti_pembayaran) }}" alt="Bukti Pembayaran" class="w-full h-auto mb-4 rounded">
+                <img src="{{ asset('storage/' . $trx->bukti) }}" alt="Bukti Pembayaran" class="w-full h-auto mb-4 rounded">
 
                 <button onclick="document.getElementById('bukti').classList.add('hidden')" 
                         class="block w-full bg-secondary text-white py-2 rounded hover:bg-secondary/80 transition">

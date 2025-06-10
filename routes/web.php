@@ -20,6 +20,8 @@ Route::get('/transactions', [TransactionController::class, 'index'])->name('tran
 
 Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
 Route::get('/transactions/status/{slug}', [TransactionController::class, 'status'])->name('transactions.status');
+
+
 Route::post('/transactions/status/{slug}', [TransactionController::class, 'uploadBukti'])->name('transactions.uploadBukti');
 
 Route::get('/admin/pending-transactions', [TransactionController::class, 'pending'])->name('transactions.pending');

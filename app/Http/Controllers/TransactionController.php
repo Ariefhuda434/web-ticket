@@ -7,12 +7,16 @@ use App\Models\Transaction;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Mail\PaymentConfirmed;
+use function PHPSTORM_META\type;
+use Illuminate\Support\Facades\App;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\File;
+
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Response;
 
 class TransactionController extends Controller
 {
-    // Proses simpan transaksi baru
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -67,7 +71,6 @@ public function index(Request $request)
 }
 
 
-// Admin lihat pending + paid
 public function pending(Request $request)
 {
     $key = $request->query('key');
@@ -96,7 +99,6 @@ public function approve($slug)
     return back()->with('success', 'Transaksi berhasil diapprove.');
 }
 
-    // Terima webhook untuk update status transaksi
     public function webhook(Request $request)
     {
         $transactionId = $request->input('transaction_id');
@@ -135,7 +137,6 @@ public function approve($slug)
         return response()->json(['message' => 'Status updated']);
     }
 
-    // Tampilkan status transaksi berdasarkan slug
     public function status($slug)
     {
         $transaction = Transaction::where('slug', $slug)->firstOrFail();
@@ -143,8 +144,9 @@ public function approve($slug)
         return view('transactions.status', compact('transaction'));
     }
 
-    // Upload bukti pembayaran berdasarkan slug transaksi
-   public function uploadBukti(Request $request, $slug)
+
+  
+public function uploadBukti(Request $request, $slug)
 {
     $request->validate([
         'bukti' => 'required|mimes:jpeg,jpg,png,pdf',
@@ -153,15 +155,11 @@ public function approve($slug)
     $transaction = Transaction::where('slug', $slug)->firstOrFail();
 
     if ($request->hasFile('bukti')) {
-        $file = $request->file('bukti');
-        $originalExtension = $file->getClientOriginalExtension();
-        $filename = time() . '_bukti.' . $originalExtension;
-        $path = $file->storeAs('bukti', $filename, 'public');
+        $filename = $request->file('bukti')->store('bukti');
 
-        $transaction->bukti_pembayaran = $path;
-        $transaction->save();
+        $transaction->bukti = $filename;
+        $transaction->save(); 
 
-        // Kembali ke halaman status transaksi
         return redirect()->route('transactions.status', $transaction->slug)
             ->with('success', 'Bukti pembayaran berhasil diupload!');
     }
